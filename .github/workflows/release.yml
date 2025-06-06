@@ -79,16 +79,13 @@ jobs:
         LDFLAGS="-s -w -X 'main.Version=${VERSION}' -X 'main.BuildTime=${BUILD_TIME}' -X 'main.GitCommit=${GIT_COMMIT}'"
         
         if [ "${{ matrix.goos }}" = "windows" ]; then
-          go build -ldflags "${LDFLAGS}" -o gover-${{ matrix.suffix }} .
+          # Windows: 二进制文件有 .exe 后缀，但压缩包名称不包含 .exe
+          go build -ldflags "${LDFLAGS}" -o gover.exe .
+          zip gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip gover.exe config.yaml README.md
         else
-          go build -ldflags "${LDFLAGS}" -o gover-${{ matrix.suffix }} .
-        fi
-        
-        # 创建压缩包
-        if [ "${{ matrix.goos }}" = "windows" ]; then
-          zip gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip gover-${{ matrix.suffix }} config.yaml README.md
-        else
-          tar -czf gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz gover-${{ matrix.suffix }} config.yaml README.md
+          # Linux/macOS: 无后缀
+          go build -ldflags "${LDFLAGS}" -o gover .
+          tar -czf gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz gover config.yaml README.md
         fi
 
     - name: Upload artifacts
