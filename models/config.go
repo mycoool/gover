@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -64,7 +65,13 @@ var AppConfig *Config
 
 // LoadConfig 加载配置文件
 func LoadConfig(configPath string) (*Config, error) {
-	data, err := os.ReadFile(configPath)
+	// 安全检查：验证配置文件路径
+	cleanPath := filepath.Clean(configPath)
+	if strings.Contains(cleanPath, "..") {
+		return nil, fmt.Errorf("invalid config path: %s", configPath)
+	}
+
+	data, err := os.ReadFile(cleanPath)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +164,7 @@ func createBeegoConfig() {
 
 	// 检查 conf 目录是否存在，不存在则创建
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
-		err := os.MkdirAll(configDir, 0755)
+		err := os.MkdirAll(configDir, 0750) // 更严格的目录权限
 		if err != nil {
 			log.Printf("创建 conf 目录失败: %v", err)
 			return
@@ -193,7 +200,7 @@ level = %s
 `, AppConfig.Server.Port, AppConfig.Logging.Level)
 
 		// 写入文件
-		err := os.WriteFile(configFile, []byte(configContent), 0644)
+		err := os.WriteFile(configFile, []byte(configContent), 0600) // 更严格的文件权限
 		if err != nil {
 			log.Printf("创建 app.conf 文件失败: %v", err)
 			return

@@ -39,14 +39,18 @@ func clearSessionFiles() {
 			pattern := filepath.Join(dir, "session_*")
 			files, _ := filepath.Glob(pattern)
 			for _, file := range files {
-				os.Remove(file)
+				if err := os.Remove(file); err != nil {
+					fmt.Printf("警告: 删除文件失败 %s: %v\n", file, err)
+				}
 			}
 
 			// 查找并删除 gorilla session 文件
 			pattern = filepath.Join(dir, "gorilla_*")
 			files, _ = filepath.Glob(pattern)
 			for _, file := range files {
-				os.Remove(file)
+				if err := os.Remove(file); err != nil {
+					fmt.Printf("警告: 删除文件失败 %s: %v\n", file, err)
+				}
 			}
 		}
 	}
