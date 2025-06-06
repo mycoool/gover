@@ -81,11 +81,11 @@ jobs:
         if [ "${{ matrix.goos }}" = "windows" ]; then
           # Windows: 二进制文件有 .exe 后缀，但压缩包名称不包含 .exe
           go build -ldflags "${LDFLAGS}" -o gover.exe .
-          zip gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip gover.exe config.yaml README.md
+          zip -r gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip gover.exe config.yaml README.md views/
         else
           # Linux/macOS: 无后缀
           go build -ldflags "${LDFLAGS}" -o gover .
-          tar -czf gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz gover config.yaml README.md
+          tar -czf gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz gover config.yaml README.md views/
         fi
 
     - name: Upload artifacts
