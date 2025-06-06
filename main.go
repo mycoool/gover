@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"gover/controllers"
@@ -60,6 +61,10 @@ func main() {
 	// 解析命令行参数
 	clearSessions := flag.Bool("clear-sessions", false, "清除所有 Session 文件并退出")
 	showVersion := flag.Bool("version", false, "显示版本信息")
+	debugMode := flag.Bool("debug", false, "启用调试模式，显示详细的项目诊断信息")
+	fixGitPermissions := flag.Bool("fix-git", false, "修复所有项目的 Git 权限问题并退出")
+	fastMode := flag.Bool("fast", false, "启用快速模式，减少 Git 操作以提高响应速度")
+	skipFetch := flag.Bool("skip-fetch", false, "跳过 Git fetch 操作，使用本地数据")
 	flag.Parse()
 
 	// 如果指定了显示版本参数
@@ -80,6 +85,42 @@ func main() {
 		os.Exit(0)
 	}
 
+	// 如果指定了修复 Git 权限参数
+	if *fixGitPermissions {
+		fmt.Printf("🔧 正在修复 Git 权限问题...\n")
+
+		// 先加载配置
+		models.InitConfig()
+
+		successCount := 0
+		for _, project := range models.AppConfig.GetEnabledProjects() {
+			fmt.Printf("📁 处理项目: %s (%s)\n", project.Name, project.Path)
+
+			// 检查项目路径是否存在
+			if _, err := os.Stat(project.Path); os.IsNotExist(err) {
+				fmt.Printf("   ❌ 路径不存在: %s\n", project.Path)
+				continue
+			}
+
+			// 添加安全目录配置
+			cmd := exec.Command("git", "config", "--global", "--add", "safe.directory", project.Path)
+			if err := cmd.Run(); err != nil {
+				fmt.Printf("   ❌ 配置失败: %v\n", err)
+
+				// 尝试其他方法
+				fmt.Printf("   🔄 尝试手动修复，请运行:\n")
+				fmt.Printf("      git config --global --add safe.directory %s\n", project.Path)
+			} else {
+				fmt.Printf("   ✅ 已添加安全目录配置\n")
+				successCount++
+			}
+		}
+
+		fmt.Printf("\n🎉 处理完成！成功修复 %d 个项目\n", successCount)
+		fmt.Printf("💡 现在可以正常运行 gover 了\n")
+		os.Exit(0)
+	}
+
 	// 立即输出程序信息，覆盖 Beego 的配置警告
 	fmt.Printf("\n🚀 Gover %s - Git 版本管理工具启动中...\n", Version)
 	fmt.Printf("📝 使用 YAML 配置文件 (config.yaml)\n")
@@ -87,9 +128,32 @@ func main() {
 	// 初始化配置（会自动创建 app.conf 文件）
 	models.InitConfig()
 
+	// 设置嵌入的模板文件
+	if err := setupEmbeddedTemplates(); err != nil {
+		fmt.Printf("❌ 模板设置失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 设置调试模式
+	controllers.DebugMode = *debugMode
+	if *debugMode {
+		fmt.Printf("🐛 调试模式已启用\n")
+	}
+
+	// 设置性能模式
+	controllers.FastMode = *fastMode
+	controllers.SkipFetch = *skipFetch
+	if *fastMode {
+		fmt.Printf("⚡ 快速模式已启用\n")
+	}
+	if *skipFetch {
+		fmt.Printf("📡 跳过 fetch 操作\n")
+	}
+
 	// 设置路由
 	web.Router("/", &controllers.VersionController{}, "get,post:Index")
 	web.Router("/checkout", &controllers.VersionController{}, "post:Checkout")
+	web.Router("/refresh", &controllers.VersionController{}, "post:RefreshProject")
 	web.Router("/login", &controllers.AuthController{}, "get,post:Login")
 	web.Router("/logout", &controllers.AuthController{}, "get:Logout")
 
@@ -103,7 +167,20 @@ func main() {
 	fmt.Printf("👤 用户名: %s\n", models.AppConfig.Auth.Username)
 	fmt.Printf("🔐 密码: %s\n", models.AppConfig.Auth.Password)
 	fmt.Printf("📁 管理 %d 个项目\n", len(models.AppConfig.GetEnabledProjects()))
-	fmt.Printf("🌟 服务启动中...\n\n")
+
+	// 检查项目权限并提供修复建议
+	for _, project := range models.AppConfig.GetEnabledProjects() {
+		if _, err := os.Stat(project.Path); err != nil {
+			fmt.Printf("⚠️ 项目路径不存在: %s\n", project.Path)
+		}
+	}
+
+	fmt.Printf("\n💡 提示: 如果遇到 Git 权限问题，可以运行以下命令修复:\n")
+	for _, project := range models.AppConfig.GetEnabledProjects() {
+		fmt.Printf("   git config --global --add safe.directory %s\n", project.Path)
+	}
+
+	fmt.Printf("\n🌟 服务启动中...\n\n")
 
 	web.Run()
 }

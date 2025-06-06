@@ -239,10 +239,49 @@
             margin-bottom: 30px;
         }
         
+        .selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
         .project-selector h2 {
             color: #333;
-            margin-bottom: 20px;
+            margin: 0;
             font-size: 1.5em;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+        }
+        
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+        
+        .refresh-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .project-tabs {
@@ -301,6 +340,106 @@
         
         .project-tab.active .project-path {
             background: rgba(255,255,255,0.2);
+        }
+        
+        /* 状态显示样式 */
+        .current-status {
+            margin-bottom: 30px;
+        }
+        
+        .current-status h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .status-info {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 200px;
+        }
+        
+        .status-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            font-weight: bold;
+        }
+        
+        .status-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        .branch-mode {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .tag-mode {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+        
+        .unknown-mode {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+        
+        .current-branch, .current-tag {
+            background: rgba(0,123,255,0.1);
+            color: #0056b3;
+            border: 1px solid rgba(0,123,255,0.3);
+        }
+        
+        /* 分支列表样式 */
+        .branch-list {
+            margin-bottom: 30px;
+        }
+        
+        .branch-list h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .remote-badge {
+            font-size: 0.7em;
+            background: rgba(255,193,7,0.2);
+            color: #e68900;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+            border: 1px solid rgba(255,193,7,0.3);
+        }
+        
+        .branch-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .branch-btn:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+        }
+        
+        .tag-btn {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .tag-btn:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
         }
         
         /* 模态框样式 */
@@ -558,7 +697,14 @@
             
             <!-- 项目选择器 -->
             <div class="project-selector">
-                <h2>📁 选择项目</h2>
+                <div class="selector-header">
+                    <h2>📁 选择项目</h2>
+                    {{if .CurrentProject}}
+                    <button id="refreshBtn" class="refresh-btn" onclick="refreshProject('{{.CurrentProject.Name}}')">
+                        🔄 刷新数据
+                    </button>
+                    {{end}}
+                </div>
                 <div class="project-tabs">
                     {{range .Projects}}
                     <a href="/?project={{.Name}}" class="project-tab {{if .Current}}active{{end}}">
@@ -570,10 +716,86 @@
                 </div>
             </div>
             
-            <!-- 当前项目版本列表 -->
+            <!-- 当前项目状态显示 -->
             {{if .CurrentProject}}
+            <div class="current-status">
+                <h2>📊 {{.CurrentProject.Name}} - 当前状态</h2>
+                <div class="status-info">
+                    {{if eq .CurrentProject.WorkingMode "branch"}}
+                        <div class="status-item">
+                            <span class="status-label">当前模式:</span>
+                            <span class="status-value branch-mode">🌿 分支模式</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">当前分支:</span>
+                            <span class="status-value current-branch">{{.CurrentProject.CurrentBranch}}</span>
+                        </div>
+                    {{else if eq .CurrentProject.WorkingMode "tag"}}
+                        <div class="status-item">
+                            <span class="status-label">当前模式:</span>
+                            <span class="status-value tag-mode">🏷️ 标签模式</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">当前标签:</span>
+                            <span class="status-value current-tag">{{.CurrentProject.CurrentTag}}</span>
+                        </div>
+                    {{else}}
+                        <div class="status-item">
+                            <span class="status-label">当前模式:</span>
+                            <span class="status-value unknown-mode">❓ 未知状态</span>
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- 分支列表 -->
+            <div class="branch-list">
+                <h2>🌿 {{.CurrentProject.Name}} - 分支列表</h2>
+                
+                {{if .CurrentProject.Branches}}
+                    {{range .CurrentProject.Branches}}
+                    <div class="tag-item {{if .Checked}}current{{end}}">
+                        <div class="tag-info">
+                            <div class="tag-header">
+                                <div class="tag-name">
+                                    {{if .IsRemote}}🌐{{else}}🏠{{end}} {{.Name}}
+                                    {{if .IsRemote}}<span class="remote-badge">远程</span>{{end}}
+                                </div>
+                                <div class="tag-meta">
+                                    {{if .CommitTime}}
+                                    <span class="tag-time">📅 {{.CommitTime}}</span>
+                                    {{end}}
+                                    {{if .CommitHash}}
+                                    <span class="tag-hash">🔗 {{.CommitHash}}</span>
+                                    {{end}}
+                                </div>
+                            </div>
+                            {{if .LastCommit}}
+                            <div class="tag-message">💬 {{.LastCommit}}</div>
+                            {{end}}
+                        </div>
+                        <div class="tag-status">
+                            {{if .Checked}}
+                                <span class="current-badge">当前分支</span>
+                            {{else}}
+                                <button type="button" class="checkout-btn branch-btn" 
+                                        onclick="showConfirmModal('branch', '确定要将项目 {{$.CurrentProject.Name}} 切换到分支 {{.Name}} 吗？', '/checkout', {branch: '{{.Name}}', project: '{{$.CurrentProject.Name}}'})">
+                                    🔀 切换到此分支
+                                </button>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                {{else}}
+                    <div class="no-tags">
+                        🌱 该项目暂无可用分支
+                    </div>
+                {{end}}
+            </div>
+
+            <!-- 标签列表 -->
             <div class="tag-list">
-                <h2>📋 {{.CurrentProject.Name}} - 可用版本列表</h2>
+                <h2>🏷️ {{.CurrentProject.Name}} - 标签列表</h2>
                 
                 {{if .CurrentProject.Tags}}
                     {{range .CurrentProject.Tags}}
@@ -594,11 +816,11 @@
                         </div>
                         <div class="tag-status">
                             {{if .Checked}}
-                                <span class="current-badge">当前版本</span>
+                                <span class="current-badge">当前标签</span>
                             {{else}}
-                                <button type="button" class="checkout-btn" 
-                                        onclick="showConfirmModal('rollback', '确定要将项目 {{$.CurrentProject.Name}} 回滚到版本 {{.Name}} 吗？', '/checkout', {tag: '{{.Name}}', project: '{{$.CurrentProject.Name}}'})">
-                                    🔄 回滚到此版本
+                                <button type="button" class="checkout-btn tag-btn" 
+                                        onclick="showConfirmModal('tag', '确定要将项目 {{$.CurrentProject.Name}} 切换到标签 {{.Name}} 吗？', '/checkout', {tag: '{{.Name}}', project: '{{$.CurrentProject.Name}}'})">
+                                    🔄 切换到此标签
                                 </button>
                             {{end}}
                         </div>
@@ -662,6 +884,12 @@
             if (action === 'logout') {
                 modalTitle.textContent = '退出登录';
                 modalIcon.textContent = '🚪';
+            } else if (action === 'tag') {
+                modalTitle.textContent = '标签切换';
+                modalIcon.textContent = '🏷️';
+            } else if (action === 'branch') {
+                modalTitle.textContent = '分支切换';
+                modalIcon.textContent = '🌿';
             } else if (action === 'rollback') {
                 modalTitle.textContent = '版本回滚';
                 modalIcon.textContent = '🔄';
@@ -688,7 +916,7 @@
         function confirmAction() {
             if (currentAction === 'logout') {
                 window.location.href = currentUrl;
-            } else if (currentAction === 'rollback' && currentData) {
+            } else if ((currentAction === 'tag' || currentAction === 'branch' || currentAction === 'rollback') && currentData) {
                 // 创建表单并提交
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -725,6 +953,46 @@
             }
         });
         
+        // 刷新项目数据
+        function refreshProject(projectName) {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const originalText = refreshBtn.innerHTML;
+            
+            // 禁用按钮并显示加载状态
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '🔄 刷新中...';
+            
+            // 发送刷新请求
+            fetch('/refresh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'project=' + encodeURIComponent(projectName)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 刷新成功，重新加载页面
+                    window.location.reload();
+                } else {
+                    // 显示错误信息
+                    alert('刷新失败: ' + data.message);
+                    
+                    // 恢复按钮状态
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('刷新请求失败:', error);
+                alert('刷新请求失败，请检查网络连接');
+                
+                // 恢复按钮状态
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = originalText;
+            });
+        }
 
     </script>
 </body>

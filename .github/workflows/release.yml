@@ -65,7 +65,19 @@ jobs:
     - name: Get dependencies
       run: go mod download
 
-    - name: Build binary
+    - name: Verify required files
+      run: |
+        # 检查嵌入模板所需的文件
+        echo "🔍 检查必要文件..."
+        for file in main.go embed.go views/version/index.html views/auth/login.html config.yaml README.md; do
+          if [[ ! -f "$file" ]]; then
+            echo "❌ 缺少必要文件: $file"
+            exit 1
+          fi
+          echo "✅ 找到: $file"
+        done
+
+    - name: Build binary with embedded templates
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
@@ -75,17 +87,118 @@ jobs:
         GIT_COMMIT=$(git rev-parse --short HEAD)
         VERSION=${{ github.ref_name }}
         
-        # 构建二进制文件
+        echo "🔨 构建 ${VERSION} for ${{ matrix.goos }}/${{ matrix.goarch }} (嵌入模板)"
+        
+        # 构建二进制文件（嵌入模板）
         LDFLAGS="-s -w -X 'main.Version=${VERSION}' -X 'main.BuildTime=${BUILD_TIME}' -X 'main.GitCommit=${GIT_COMMIT}'"
         
+        # 创建部署说明文件
+        cat > DEPLOY.md << 'EOF'
+        # Gover 部署说明
+
+        ## 快速部署
+
+        1. 解压文件：
+           ```bash
+           tar -xzf gover-*.tar.gz  # Linux/macOS
+           unzip gover-*.zip        # Windows
+           cd gover-*
+           ```
+
+        2. 复制配置文件：
+           ```bash
+           cp config.yaml.example config.yaml
+           ```
+
+        3. 编辑配置文件：
+           ```bash
+           vim config.yaml  # Linux/macOS
+           notepad config.yaml  # Windows
+           ```
+
+        4. 运行应用：
+           ```bash
+           ./gover          # Linux/macOS
+           gover.exe        # Windows
+           ```
+
+        ## 模板文件
+
+        此版本已将模板文件嵌入到二进制文件中，无需额外的 views 目录。
+
+        ## 性能选项
+
+        - 默认模式: `./gover`
+        - 快速模式: `./gover --fast --skip-fetch`
+        - 调试模式: `./gover --debug`
+
+        ## 权限问题
+
+        如果遇到 Git 权限问题，运行：
+        ```bash
+        ./gover --fix-git
+        ```
+
+        ## 服务模式 (Linux)
+
+        ```bash
+        # 创建 systemd 服务
+        sudo tee /etc/systemd/system/gover.service > /dev/null << EOL
+        [Unit]
+        Description=Gover Git Version Manager
+        After=network.target
+
+        [Service]
+        Type=simple
+        User=www-data
+        WorkingDirectory=/path/to/gover
+        ExecStart=/path/to/gover/gover --fast
+        Restart=always
+        RestartSec=5
+
+        [Install]
+        WantedBy=multi-user.target
+        EOL
+
+        # 启用并启动服务
+        sudo systemctl enable gover
+        sudo systemctl start gover
+        ```
+        EOF
+        
         if [ "${{ matrix.goos }}" = "windows" ]; then
-          # Windows: 二进制文件有 .exe 后缀，但压缩包名称不包含 .exe
+          # Windows: 构建 .exe 文件
           go build -ldflags "${LDFLAGS}" -o gover.exe .
-          zip -r gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip gover.exe config.yaml README.md views/
+          
+          # 创建发布包（只包含必要文件，不包含 views 目录）
+          cp config.yaml config.yaml.example
+          zip -r gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip \
+            gover.exe \
+            config.yaml.example \
+            README.md \
+            DEPLOY.md
+            
+          echo "✅ Windows 包创建完成: gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip"
         else
-          # Linux/macOS: 无后缀
+          # Linux/macOS: 构建无后缀文件
           go build -ldflags "${LDFLAGS}" -o gover .
-          tar -czf gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz gover config.yaml README.md views/
+          
+          # 创建发布包（只包含必要文件，不包含 views 目录）
+          cp config.yaml config.yaml.example
+          tar -czf gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz \
+            gover \
+            config.yaml.example \
+            README.md \
+            DEPLOY.md
+            
+          echo "✅ Unix 包创建完成: gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz"
+        fi
+        
+        # 显示构建结果
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          ls -lh gover.exe gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip
+        else
+          ls -lh gover gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz
         fi
 
     - name: Upload artifacts
@@ -136,22 +249,42 @@ jobs:
         ### 🛠️ 安装方法
 
         1. 下载对应平台的压缩包
-        2. 解压到目标目录
-        3. 根据 README.md 配置 config.yaml
-        4. 运行 `./gover` (Linux/macOS) 或 `gover.exe` (Windows)
+        2. 解压到目标目录：
+           ```bash
+           tar -xzf gover-*.tar.gz  # Linux/macOS
+           unzip gover-*.zip        # Windows
+           ```
+        3. 复制配置文件：
+           ```bash
+           cp config.yaml.example config.yaml
+           ```
+        4. 编辑配置文件并运行：
+           ```bash
+           ./gover          # Linux/macOS
+           gover.exe        # Windows
+           ```
 
         ### 📝 使用说明
 
-        详细的配置和使用说明请参考项目 README.md 文件。
+        详细的配置和使用说明请参考项目 README.md 和 DEPLOY.md 文件。
+
+        ### ⚡ 性能选项
+
+        - **默认模式**: `./gover`
+        - **快速模式**: `./gover --fast --skip-fetch` (推荐生产环境)
+        - **调试模式**: `./gover --debug`
 
         ### 🔧 技术特性
 
         - 🏷️ 智能版本排序
         - 🔄 一键版本回滚
-        - 📁 多项目管理
+        - 📁 多项目管理  
         - 🔐 安全认证系统
         - 📱 响应式界面
         - 🌐 现代化 Web UI
+        - 📦 **模板文件嵌入** (无需额外文件)
+        - ⚡ **缓存优化** (快速响应)
+        - 🚀 **零依赖部署** (单二进制文件)
 
         ---
         

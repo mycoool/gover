@@ -16,15 +16,10 @@ projects:
     path: "/www/wwwroot/test"
     description: "当前版本管理工具项目"
     enabled: true
-    
+
   - name: "测试项目2"
-    path: "/www/wwwroot/test2"
-    description: "测试环境项目"
-    enabled: true
-    
-  - name: "测试项目3"
-    path: "/www/wwwroot/test3"
-    description: "生产环境项目"
+    path: "/www/wwwroot/inscription-api"
+    description: "当前版本管理工具项目"
     enabled: true
 
 # 界面配置
