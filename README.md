@@ -22,13 +22,32 @@ Gover 是一个基于 Beego 框架开发的 Git 版本管理工具，可以方�
 
 ## 安装和运行
 
-### 前提条件
+### 方式1: 下载预编译版本（推荐）
+
+从 [GitHub Releases](https://github.com/your-username/gover/releases) 页面下载对应平台的最新版本：
+
+- **Linux AMD64**: `gover-{version}-linux-amd64.tar.gz`
+- **Linux ARM64**: `gover-{version}-linux-arm64.tar.gz`
+- **macOS Intel**: `gover-{version}-darwin-amd64.tar.gz`
+- **macOS Apple Silicon**: `gover-{version}-darwin-arm64.tar.gz`
+- **Windows AMD64**: `gover-{version}-windows-amd64.exe.zip`
+- **Windows ARM64**: `gover-{version}-windows-arm64.exe.zip`
+
+**安装步骤:**
+1. 下载对应平台的压缩包
+2. 解压到目标目录
+3. 根据需要修改 `config.yaml` 配置
+4. 运行 `./gover` (Linux/macOS) 或 `gover.exe` (Windows)
+
+### 方式2: 从源码构建
+
+#### 前提条件
 
 - Go 1.21 或更高版本
 - Git 已安装并配置
 - 当前目录是一个 Git 仓库
 
-### 快速启动
+#### 快速启动
 
 1. 构建并运行：
    ```bash
@@ -37,11 +56,17 @@ Gover 是一个基于 Beego 框架开发的 Git 版本管理工具，可以方�
 
 2. 或者手动运行：
    ```bash
-       go build -o gover .
-     ./gover
+   go build -o gover .
+   ./gover
    ```
 
-3. 访问 http://localhost:8080
+3. 多平台构建：
+   ```bash
+   chmod +x build.sh
+   ./build.sh
+   ```
+
+4. 访问 http://localhost:8080
 
 > **注意**: 启动时可能会看到 Beego 框架的配置文件警告信息，这是正常的时序问题。系统会自动创建必要的配置文件。详见 [NOTICE.md](NOTICE.md)
 
@@ -214,4 +239,25 @@ gogo/
 - [功能特性详情](FEATURES.md)
 - [安全升级说明](SECURITY.md)
 - [Session 管理测试](SESSION_TEST.md)
-- [启动警告说明](NOTICE.md) 
+- [启动警告说明](NOTICE.md)
+- [GitHub Actions 自动化指南](GITHUB_ACTIONS.md)
+
+## 🚀 自动化构建
+
+本项目已配置 GitHub Actions 自动化工作流：
+
+- **持续集成**: 推送代码时自动测试和构建
+- **自动发布**: 推送标签时自动构建多平台版本并创建 Release
+- **代码质量检查**: 自动运行格式化、静态分析和安全扫描
+
+### 创建新版本发布
+
+```bash
+# 创建标签
+git tag -a v1.0.0 -m "Release v1.0.0"
+
+# 推送标签触发自动发布
+git push origin v1.0.0
+```
+
+详细说明请参考 [GitHub Actions 自动化指南](GITHUB_ACTIONS.md)。 

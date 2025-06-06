@@ -1,0 +1,158 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 触发条件：推送以 v 开头的标签，如 v1.0.0
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        # 构建多个平台的二进制文件
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+          - goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+          - goos: windows
+            goarch: amd64
+            suffix: windows-amd64.exe
+          - goos: windows
+            goarch: arm64
+            suffix: windows-arm64.exe
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        
+    - name: Get dependencies
+      run: go mod download
+
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        # 获取构建信息
+        BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        GIT_COMMIT=$(git rev-parse --short HEAD)
+        VERSION=${{ github.ref_name }}
+        
+        # 构建二进制文件
+        LDFLAGS="-s -w -X 'main.Version=${VERSION}' -X 'main.BuildTime=${BUILD_TIME}' -X 'main.GitCommit=${GIT_COMMIT}'"
+        
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          go build -ldflags "${LDFLAGS}" -o gover-${{ matrix.suffix }} .
+        else
+          go build -ldflags "${LDFLAGS}" -o gover-${{ matrix.suffix }} .
+        fi
+        
+        # 创建压缩包
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          zip gover-${{ github.ref_name }}-${{ matrix.suffix }}.zip gover-${{ matrix.suffix }} config.yaml README.md
+        else
+          tar -czf gover-${{ github.ref_name }}-${{ matrix.suffix }}.tar.gz gover-${{ matrix.suffix }} config.yaml README.md
+        fi
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: gover-${{ matrix.suffix }}
+        path: |
+          gover-${{ github.ref_name }}-${{ matrix.suffix }}.*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: ./artifacts
+
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # 生成发布说明
+        cat > release_notes.md << 'EOF'
+        ## 🚀 Gover ${{ steps.version.outputs.VERSION }} 发布
+
+        ### 📦 下载说明
+        
+        请根据您的操作系统选择对应的版本：
+        
+        - **Linux AMD64**: `gover-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz`
+        - **Linux ARM64**: `gover-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz`
+        - **macOS Intel**: `gover-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz`
+        - **macOS Apple Silicon**: `gover-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz`
+        - **Windows AMD64**: `gover-${{ steps.version.outputs.VERSION }}-windows-amd64.exe.zip`
+        - **Windows ARM64**: `gover-${{ steps.version.outputs.VERSION }}-windows-arm64.exe.zip`
+
+        ### 🛠️ 安装方法
+
+        1. 下载对应平台的压缩包
+        2. 解压到目标目录
+        3. 根据 README.md 配置 config.yaml
+        4. 运行 `./gover` (Linux/macOS) 或 `gover.exe` (Windows)
+
+        ### 📝 使用说明
+
+        详细的配置和使用说明请参考项目 README.md 文件。
+
+        ### 🔧 技术特性
+
+        - 🏷️ 智能版本排序
+        - 🔄 一键版本回滚
+        - 📁 多项目管理
+        - 🔐 安全认证系统
+        - 📱 响应式界面
+        - 🌐 现代化 Web UI
+
+        ---
+        
+        **完整更新日志请查看项目提交历史。**
+        EOF
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        name: "Gover ${{ steps.version.outputs.VERSION }}"
+        body_path: release_notes.md
+        draft: false
+        prerelease: false
+        files: |
+          ./artifacts/*/gover-${{ steps.version.outputs.VERSION }}-*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload to latest release
+      if: ${{ !contains(steps.version.outputs.VERSION, 'beta') && !contains(steps.version.outputs.VERSION, 'alpha') && !contains(steps.version.outputs.VERSION, 'rc') }}
+      run: |
+        echo "正式版本已发布: ${{ steps.version.outputs.VERSION }}" 

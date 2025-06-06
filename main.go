@@ -12,6 +12,13 @@ import (
 	"github.com/beego/beego/v2/server/web"
 )
 
+// 版本信息，在构建时通过 ldflags 注入
+var (
+	Version   = "dev"     // 版本号
+	BuildTime = "unknown" // 构建时间
+	GitCommit = "unknown" // Git 提交哈希
+)
+
 func init() {
 	// Beego 配置将通过 app.conf 文件自动加载
 }
@@ -48,7 +55,18 @@ func clearSessionFiles() {
 func main() {
 	// 解析命令行参数
 	clearSessions := flag.Bool("clear-sessions", false, "清除所有 Session 文件并退出")
+	showVersion := flag.Bool("version", false, "显示版本信息")
 	flag.Parse()
+
+	// 如果指定了显示版本参数
+	if *showVersion {
+		fmt.Printf("🚀 Gover - Git 版本管理工具\n")
+		fmt.Printf("📋 版本: %s\n", Version)
+		fmt.Printf("🕐 构建时间: %s\n", BuildTime)
+		fmt.Printf("📝 Git 提交: %s\n", GitCommit)
+		fmt.Printf("🔗 项目地址: https://github.com/your-username/gover\n")
+		os.Exit(0)
+	}
 
 	// 如果指定了清除 Session 参数
 	if *clearSessions {
@@ -61,7 +79,7 @@ func main() {
 	}
 
 	// 立即输出程序信息，覆盖 Beego 的配置警告
-	fmt.Printf("\n🚀 Git 版本管理工具启动中...\n")
+	fmt.Printf("\n🚀 Gover %s - Git 版本管理工具启动中...\n", Version)
 	fmt.Printf("⚠️  上方的 Beego 配置警告可以忽略（系统将自动创建）\n")
 	fmt.Printf("📝 使用 YAML 配置文件 (config.yaml)\n")
 	fmt.Printf("📁 支持多项目管理\n")
