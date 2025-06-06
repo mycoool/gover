@@ -25,6 +25,9 @@ jobs:
           - goos: linux
             goarch: arm64
             suffix: linux-arm64
+          - goos: linux
+            goarch: 386
+            suffix: linux-386
           - goos: darwin
             goarch: amd64
             suffix: darwin-amd64
@@ -33,10 +36,13 @@ jobs:
             suffix: darwin-arm64
           - goos: windows
             goarch: amd64
-            suffix: windows-amd64.exe
+            suffix: windows-amd64
           - goos: windows
             goarch: arm64
-            suffix: windows-arm64.exe
+            suffix: windows-arm64
+          - goos: windows
+            goarch: 386
+            suffix: windows-386
 
     steps:
     - name: Checkout code
@@ -123,10 +129,12 @@ jobs:
         
         - **Linux AMD64**: `gover-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz`
         - **Linux ARM64**: `gover-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz`
+        - **Linux 386**: `gover-${{ steps.version.outputs.VERSION }}-linux-386.tar.gz`
         - **macOS Intel**: `gover-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz`
         - **macOS Apple Silicon**: `gover-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz`
-        - **Windows AMD64**: `gover-${{ steps.version.outputs.VERSION }}-windows-amd64.exe.zip`
-        - **Windows ARM64**: `gover-${{ steps.version.outputs.VERSION }}-windows-arm64.exe.zip`
+        - **Windows AMD64**: `gover-${{ steps.version.outputs.VERSION }}-windows-amd64.zip`
+        - **Windows ARM64**: `gover-${{ steps.version.outputs.VERSION }}-windows-arm64.zip`
+        - **Windows 386**: `gover-${{ steps.version.outputs.VERSION }}-windows-386.zip`
 
         ### 🛠️ 安装方法
 
