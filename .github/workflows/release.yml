@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'  # 触发条件：推送以 v 开头的标签，如 v1.0.0
 
+# 设置工作流权限
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   build:
     name: Build and Release
@@ -41,6 +46,15 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.23'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-${{ matrix.goos }}-${{ matrix.goarch }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.goos }}-${{ matrix.goarch }}-go-
+          ${{ runner.os }}-go-
         
     - name: Get dependencies
       run: go mod download
