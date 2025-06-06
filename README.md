@@ -24,7 +24,7 @@ Gover 是一个基于 Beego 框架开发的 Git 版本管理工具，可以方�
 
 ### 方式1: 下载预编译版本（推荐）
 
-从 [GitHub Releases](https://github.com/your-username/gover/releases) 页面下载对应平台的最新版本：
+从 [GitHub Releases](https://github.com/mycoool/gover/releases) 页面下载对应平台的最新版本：
 
 - **Linux AMD64**: `gover-{version}-linux-amd64.tar.gz`
 - **Linux ARM64**: `gover-{version}-linux-arm64.tar.gz`

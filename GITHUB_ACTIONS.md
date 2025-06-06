@@ -135,8 +135,8 @@ echo "构建完成！"
 可以在 README.md 中添加构建状态徽章：
 
 ```markdown
-[![Test](https://github.com/your-username/gover/actions/workflows/test.yml/badge.svg)](https://github.com/your-username/gover/actions/workflows/test.yml)
-[![Release](https://github.com/your-username/gover/actions/workflows/release.yml/badge.svg)](https://github.com/your-username/gover/actions/workflows/release.yml)
+[![Test](https://github.com/mycoool/gover/actions/workflows/test.yml/badge.svg)](https://github.com/mycoool/gover/actions/workflows/test.yml)
+[![Release](https://github.com/mycoool/gover/actions/workflows/release.yml/badge.svg)](https://github.com/mycoool/gover/actions/workflows/release.yml)
 ```
 
 ## 🐛 故障排除

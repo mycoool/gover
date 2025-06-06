@@ -63,8 +63,6 @@ func main() {
 		fmt.Printf("🚀 Gover - Git 版本管理工具\n")
 		fmt.Printf("📋 版本: %s\n", Version)
 		fmt.Printf("🕐 构建时间: %s\n", BuildTime)
-		fmt.Printf("📝 Git 提交: %s\n", GitCommit)
-		fmt.Printf("🔗 项目地址: https://github.com/your-username/gover\n")
 		os.Exit(0)
 	}
 
@@ -80,10 +78,7 @@ func main() {
 
 	// 立即输出程序信息，覆盖 Beego 的配置警告
 	fmt.Printf("\n🚀 Gover %s - Git 版本管理工具启动中...\n", Version)
-	fmt.Printf("⚠️  上方的 Beego 配置警告可以忽略（系统将自动创建）\n")
 	fmt.Printf("📝 使用 YAML 配置文件 (config.yaml)\n")
-	fmt.Printf("📁 支持多项目管理\n")
-	fmt.Printf("🔐 安全的 Session 认证\n\n")
 
 	// 初始化配置（会自动创建 app.conf 文件）
 	models.InitConfig()
