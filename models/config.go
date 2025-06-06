@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -65,7 +64,7 @@ var AppConfig *Config
 
 // LoadConfig 加载配置文件
 func LoadConfig(configPath string) (*Config, error) {
-	data, err := ioutil.ReadFile(configPath)
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +193,7 @@ level = %s
 `, AppConfig.Server.Port, AppConfig.Logging.Level)
 
 		// 写入文件
-		err := ioutil.WriteFile(configFile, []byte(configContent), 0644)
+		err := os.WriteFile(configFile, []byte(configContent), 0644)
 		if err != nil {
 			log.Printf("创建 app.conf 文件失败: %v", err)
 			return

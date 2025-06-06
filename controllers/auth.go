@@ -76,7 +76,14 @@ func (c *AuthController) Login() {
 			session.Options.MaxAge = models.AppConfig.Security.SessionTimeout
 		}
 
-		session.Save(c.Ctx.Request, c.Ctx.ResponseWriter)
+		if err := session.Save(c.Ctx.Request, c.Ctx.ResponseWriter); err != nil {
+			c.Data["Error"] = "会话保存失败"
+			c.Data["Username"] = username
+			c.Data["Title"] = "登录 - " + models.AppConfig.UI.Title
+			c.Data["Redirect"] = c.GetString("redirect", "")
+			c.TplName = "auth/login.html"
+			return
+		}
 
 		// 重定向到原来要访问的页面或首页
 		redirect := c.GetString("redirect", "/")
@@ -98,7 +105,10 @@ func (c *AuthController) Logout() {
 	session, _ := store.Get(c.Ctx.Request, "gogo-session")
 	session.Values["authenticated"] = false
 	session.Options.MaxAge = -1 // 删除 session
-	session.Save(c.Ctx.Request, c.Ctx.ResponseWriter)
+	if err := session.Save(c.Ctx.Request, c.Ctx.ResponseWriter); err != nil {
+		// 记录错误但不阻止退出流程
+		fmt.Printf("退出时保存会话失败: %v\n", err)
+	}
 
 	c.Redirect("/login", 302)
 }
@@ -144,7 +154,10 @@ func (c *AuthController) invalidateSession() {
 	// 清除 session 数据
 	session.Values["authenticated"] = false
 	session.Options.MaxAge = -1
-	session.Save(c.Ctx.Request, c.Ctx.ResponseWriter)
+	if err := session.Save(c.Ctx.Request, c.Ctx.ResponseWriter); err != nil {
+		// 记录错误但不阻止失效流程
+		fmt.Printf("会话失效时保存失败: %v\n", err)
+	}
 }
 
 // isLoggedIn 检查用户是否已登录
