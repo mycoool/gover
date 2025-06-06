@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-title {
+            text-align: left;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+        
+
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .tag-list {
+            margin-top: 20px;
+        }
+        
+        .tag-list h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .tag-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .tag-item:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .tag-item.current {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .tag-info {
+            flex: 1;
+            margin-right: 15px;
+        }
+        
+        .tag-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .tag-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .tag-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+        
+        .tag-time {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tag-hash {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .tag-message {
+            font-size: 0.9em;
+            color: #495057;
+            font-style: italic;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+            margin-top: 8px;
+        }
+        
+        .tag-status {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .current-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .checkout-btn {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .checkout-btn:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+            transform: scale(1.05);
+        }
+        
+        .checkout-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .no-tags {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .no-projects {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .project-selector {
+            margin-bottom: 30px;
+        }
+        
+        .project-selector h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .project-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .project-tab {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .project-tab:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .project-tab.active {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .project-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .project-desc {
+            font-size: 0.95em;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+        
+        .project-path {
+            font-size: 0.85em;
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        
+        .project-tab.active .project-path {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-30px) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .modal-close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            opacity: 1;
+        }
+        
+        .modal-body {
+            padding: 30px 25px;
+            text-align: center;
+        }
+        
+        .modal-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .modal-body p {
+            font-size: 1.1em;
+            color: #333;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .modal-footer {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+        
+        .modal-btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .modal-btn-confirm:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .modal-btn:active {
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            
+                         .header {
+                 padding: 20px;
+             }
+             
+             .header-content {
+                 flex-direction: column;
+                 gap: 20px;
+                 text-align: center;
+             }
+             
+             .header-title {
+                 text-align: center;
+             }
+             
+
+             
+             .header h1 {
+                 font-size: 2em;
+             }
+            
+            .content {
+                padding: 20px;
+            }
+            
+                         .tag-item {
+                 flex-direction: column;
+                 gap: 15px;
+             }
+             
+             .tag-header {
+                 flex-direction: column;
+                 align-items: flex-start;
+                 gap: 8px;
+             }
+             
+             .tag-meta {
+                 flex-direction: column;
+                 gap: 5px;
+             }
+             
+             .tag-status {
+                 justify-content: center;
+                 align-self: stretch;
+             }
+             
+             .tag-info {
+                 margin-right: 0;
+             }
+             
+             /* 移动端模态框样式 */
+             .modal-content {
+                 width: 95%;
+                 margin: 10px;
+             }
+             
+             .modal-header {
+                 padding: 15px 20px;
+             }
+             
+             .modal-header h3 {
+                 font-size: 1.1em;
+             }
+             
+             .modal-body {
+                 padding: 25px 20px;
+             }
+             
+             .modal-icon {
+                 font-size: 2.5em;
+             }
+             
+             .modal-body p {
+                 font-size: 1em;
+             }
+             
+             .modal-footer {
+                 padding: 15px 20px;
+                 flex-direction: column;
+                 gap: 10px;
+             }
+             
+             .modal-btn {
+                 width: 100%;
+                 padding: 12px;
+             }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>🏷️ {{.Title}}</h1>
+                </div>
+                <div class="header-actions">
+                    <a href="#" class="logout-btn" onclick="showConfirmModal('logout', '确定要退出登录吗？', '/logout')">
+                        🚪 退出
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            {{if .Success}}
+            <div class="message success">
+                ✅ {{.Success}}
+            </div>
+            {{end}}
+            
+            {{if .Error}}
+            <div class="message error">
+                ❌ {{.Error}}
+            </div>
+            {{end}}
+            
+            <!-- 项目选择器 -->
+            <div class="project-selector">
+                <h2>📁 选择项目</h2>
+                <div class="project-tabs">
+                    {{range .Projects}}
+                    <a href="/?project={{.Name}}" class="project-tab {{if .Current}}active{{end}}">
+                        <div class="project-name">{{.Name}}</div>
+                        <div class="project-desc">{{.Description}}</div>
+                        <div class="project-path">{{.Path}}</div>
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+            
+            <!-- 当前项目版本列表 -->
+            {{if .CurrentProject}}
+            <div class="tag-list">
+                <h2>📋 {{.CurrentProject.Name}} - 可用版本列表</h2>
+                
+                {{if .CurrentProject.Tags}}
+                    {{range .CurrentProject.Tags}}
+                    <div class="tag-item {{if .Checked}}current{{end}}">
+                        <div class="tag-info">
+                            <div class="tag-header">
+                                <div class="tag-name">🏷️ {{.Name}}</div>
+                                <div class="tag-meta">
+                                    <span class="tag-time">📅 {{.CreatedTime}}</span>
+                                    {{if .CommitHash}}
+                                    <span class="tag-hash">🔗 {{.CommitHash}}</span>
+                                    {{end}}
+                                </div>
+                            </div>
+                            {{if ne .Message "无备注"}}
+                            <div class="tag-message">📝 {{.Message}}</div>
+                            {{end}}
+                        </div>
+                        <div class="tag-status">
+                            {{if .Checked}}
+                                <span class="current-badge">当前版本</span>
+                            {{else}}
+                                <button type="button" class="checkout-btn" 
+                                        onclick="showConfirmModal('rollback', '确定要将项目 {{$.CurrentProject.Name}} 回滚到版本 {{.Name}} 吗？', '/checkout', {tag: '{{.Name}}', project: '{{$.CurrentProject.Name}}'})">
+                                    🔄 回滚到此版本
+                                </button>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                {{else}}
+                    <div class="no-tags">
+                        📭 该项目暂无可用版本标签
+                    </div>
+                {{end}}
+            </div>
+            {{else}}
+            <div class="no-projects">
+                📂 暂无可用项目
+            </div>
+            {{end}}
+        </div>
+    </div>
+    
+    <!-- 确认弹窗模态框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">确认操作</h3>
+                <span class="modal-close" onclick="hideConfirmModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-icon">
+                    <span id="modalIcon">⚠️</span>
+                </div>
+                <p id="modalMessage">确定要执行此操作吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="hideConfirmModal()">
+                    ❌ 取消
+                </button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmAction()">
+                    ✅ 确认
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentAction = null;
+        let currentUrl = null;
+        let currentData = null;
+        
+        // 显示确认弹窗
+        function showConfirmModal(action, message, url, data = null) {
+            currentAction = action;
+            currentUrl = url;
+            currentData = data;
+            
+            const modal = document.getElementById('confirmModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalIcon = document.getElementById('modalIcon');
+            const modalMessage = document.getElementById('modalMessage');
+            
+            // 根据操作类型设置不同的图标和标题
+            if (action === 'logout') {
+                modalTitle.textContent = '退出登录';
+                modalIcon.textContent = '🚪';
+            } else if (action === 'rollback') {
+                modalTitle.textContent = '版本回滚';
+                modalIcon.textContent = '🔄';
+            }
+            
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+            
+            // 阻止表单默认提交
+            event.preventDefault();
+            return false;
+        }
+        
+        // 隐藏确认弹窗
+        function hideConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'none';
+            currentAction = null;
+            currentUrl = null;
+            currentData = null;
+        }
+        
+        // 确认操作
+        function confirmAction() {
+            if (currentAction === 'logout') {
+                window.location.href = currentUrl;
+            } else if (currentAction === 'rollback' && currentData) {
+                // 创建表单并提交
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = currentUrl;
+                
+                // 添加表单数据
+                for (const key in currentData) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = currentData[key];
+                    form.appendChild(input);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+            
+            hideConfirmModal();
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmModal');
+            if (event.target === modal) {
+                hideConfirmModal();
+            }
+        }
+        
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideConfirmModal();
+            }
+        });
+        
+
+    </script>
+</body>
+</html> 

@@ -1,0 +1,39 @@
+# 编译后的二进制文件
+gover
+
+# 自动生成的配置文件
+conf/app.conf
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+tmp/
+temp/
+
+# IDE 和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# Session 临时文件
+sessions/
+session_*
+gorilla_*
+
+# 测试覆盖率
+*.out
+coverage.html
+
+# 依赖管理
+vendor/
+
+# 本地配置（如果有）
+config.local.yaml 

@@ -1,0 +1,46 @@
+# Git 版本管理工具配置文件
+
+# 服务器配置
+server:
+  port: 8088
+  host: "0.0.0.0"
+
+# 认证配置
+auth:
+  username: "admin"
+  password: "Ww110120.."
+
+# 项目配置
+projects:
+  - name: "测试项目1"
+    path: "/www/wwwroot/test"
+    description: "当前版本管理工具项目"
+    enabled: true
+    
+  - name: "测试项目2"
+    path: "/www/wwwroot/test2"
+    description: "测试环境项目"
+    enabled: true
+    
+  - name: "测试项目3"
+    path: "/www/wwwroot/test3"
+    description: "生产环境项目"
+    enabled: true
+
+# 界面配置
+ui:
+  title: "Gover - 版本管理(测试环境)"
+  theme: "default"
+  language: "zh-CN"
+  
+# 安全配置
+security:
+  enable_auth: true
+  session_timeout: 3600  # 秒
+  session_secret: "gover-secret-key-2024"  # Session 密钥
+  remember_me_days: 7  # 记住我功能的天数
+  
+# 日志配置
+logging:
+  level: "info"
+  file: "logs/app.log" 

@@ -1,0 +1,92 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"gover/controllers"
+	"gover/models"
+
+	"github.com/beego/beego/v2/server/web"
+)
+
+func init() {
+	// Beego 配置将通过 app.conf 文件自动加载
+}
+
+// clearSessionFiles 清除 Session 相关文件
+func clearSessionFiles() {
+	// 清除可能的 Session 临时文件
+	tempDirs := []string{
+		"/tmp",
+		os.TempDir(),
+		"./tmp",
+		"./sessions",
+	}
+
+	for _, dir := range tempDirs {
+		if _, err := os.Stat(dir); err == nil {
+			// 查找并删除 Session 文件
+			pattern := filepath.Join(dir, "session_*")
+			files, _ := filepath.Glob(pattern)
+			for _, file := range files {
+				os.Remove(file)
+			}
+
+			// 查找并删除 gorilla session 文件
+			pattern = filepath.Join(dir, "gorilla_*")
+			files, _ = filepath.Glob(pattern)
+			for _, file := range files {
+				os.Remove(file)
+			}
+		}
+	}
+}
+
+func main() {
+	// 解析命令行参数
+	clearSessions := flag.Bool("clear-sessions", false, "清除所有 Session 文件并退出")
+	flag.Parse()
+
+	// 如果指定了清除 Session 参数
+	if *clearSessions {
+		fmt.Printf("🧹 正在清除 Session 数据...\n")
+		clearSessionFiles()
+		controllers.ResetSessionStore()
+		fmt.Printf("✅ 所有 Session 数据已清除\n")
+		fmt.Printf("💡 所有用户需要重新登录\n")
+		os.Exit(0)
+	}
+
+	// 立即输出程序信息，覆盖 Beego 的配置警告
+	fmt.Printf("\n🚀 Git 版本管理工具启动中...\n")
+	fmt.Printf("⚠️  上方的 Beego 配置警告可以忽略（系统将自动创建）\n")
+	fmt.Printf("📝 使用 YAML 配置文件 (config.yaml)\n")
+	fmt.Printf("📁 支持多项目管理\n")
+	fmt.Printf("🔐 安全的 Session 认证\n\n")
+
+	// 初始化配置（会自动创建 app.conf 文件）
+	models.InitConfig()
+
+	// 设置路由
+	web.Router("/", &controllers.VersionController{}, "get,post:Index")
+	web.Router("/checkout", &controllers.VersionController{}, "post:Checkout")
+	web.Router("/login", &controllers.AuthController{}, "get,post:Login")
+	web.Router("/logout", &controllers.AuthController{}, "get:Logout")
+
+	// 从 YAML 配置覆盖端口和主机设置
+	web.BConfig.Listen.HTTPPort = models.AppConfig.Server.Port
+	web.BConfig.Listen.HTTPAddr = models.AppConfig.Server.Host
+
+	// 启动服务
+	fmt.Printf("✅ 配置加载完成\n")
+	fmt.Printf("📡 服务地址: http://%s:%d\n", models.AppConfig.Server.Host, models.AppConfig.Server.Port)
+	fmt.Printf("👤 用户名: %s\n", models.AppConfig.Auth.Username)
+	fmt.Printf("🔐 密码: %s\n", models.AppConfig.Auth.Password)
+	fmt.Printf("📁 管理 %d 个项目\n", len(models.AppConfig.GetEnabledProjects()))
+	fmt.Printf("🌟 服务启动中...\n\n")
+
+	web.Run()
+}
