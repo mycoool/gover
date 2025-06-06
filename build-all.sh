@@ -82,8 +82,8 @@ build_platform() {
         binary_name="gover.exe"
     fi
     
-    # 构建二进制文件
-    if env GOOS=$GOOS GOARCH=$GOARCH go build -ldflags "${LDFLAGS}" -o "dist/${binary_name}" .; then
+    # 构建二进制文件（静态编译）
+    if env GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=0 go build -ldflags "${LDFLAGS}" -o "dist/${binary_name}" .; then
         echo -e "   ${GREEN}✅ 构建成功${NC}"
     else
         echo -e "   ${RED}❌ 构建失败${NC}"
@@ -152,6 +152,12 @@ EOF
 ## 模板文件
 
 此版本已将模板文件嵌入到二进制文件中，无需额外的 views 目录。
+
+## 兼容性
+
+- 使用静态编译，无 glibc 版本依赖
+- 支持较老的 Linux 发行版（CentOS 7、Ubuntu 16.04+）
+- 单二进制文件，无需额外依赖库
 
 ## 权限问题
 

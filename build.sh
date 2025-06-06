@@ -95,7 +95,12 @@ echo -e "${BLUE}   目标: gover (嵌入模板)${NC}"
 # 设置构建标志
 LDFLAGS="-X 'main.Version=${VERSION}' -X 'main.BuildTime=${BUILD_TIME}' -X 'main.GitCommit=${GIT_COMMIT}' -w -s"
 
-# 构建二进制文件
+# 构建二进制文件（静态编译，避免 glibc 版本依赖）
+echo -e "${BLUE}   使用静态编译以确保跨平台兼容性${NC}"
+echo -e "${BLUE}   CGO_ENABLED=0 (避免 glibc 版本依赖)${NC}"
+export CGO_ENABLED=0
+export GOOS=linux
+export GOARCH=amd64
 if go build -ldflags="${LDFLAGS}" -o gover; then
     echo -e "${GREEN}✅ 构建成功: gover${NC}"
 else

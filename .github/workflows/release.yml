@@ -69,6 +69,7 @@ jobs:
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: 0
       run: |
         # 获取构建信息
         BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")

@@ -13,6 +13,11 @@ logs/
 tmp/
 temp/
 
+# 构建产物
+
+gover-*.gz
+gover-*.zip
+
 # IDE 和编辑器文件
 .vscode/
 .idea/
